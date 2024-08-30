@@ -17,7 +17,7 @@ This project is designed to facilitate the analysis of One Day International (OD
   - `odi_cricket.db`: The SQLite database file where the ingested cricket data is stored. This database is structured to support efficient data retrieval and complex querying.
 
 - Documentation:
-  - `Theory/`: Contains the answers of Question 0, Question 4, Question 5.
+  - `Questions & Answers/`: Contains the answers of Question 0, Question 4, Question 5.
 
 ## Getting Started 
 
