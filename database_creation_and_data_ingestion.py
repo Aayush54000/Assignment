@@ -98,33 +98,35 @@ class CricketDataIngestion:
                 )
                 cursor.execute('INSERT INTO matches VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', match_row)
                 print(f"Inserted match {match_id} into matches table.")
+                
+                for team, players in match_info.get('players', {}).items():
+                    for player in players:
+                        player_id = match_info.get('registry', {}).get('people', {}).get(player, None)
+                        if player_id:
+                            cursor.execute('INSERT OR IGNORE INTO players (player_id, name) VALUES (?, ?)', (player_id, player))
+
+                for inning in data.get('innings', []):
+                    team = inning.get('team', None)
+                    for over_data in inning.get('overs', []):
+                        over_number = over_data.get('over', None)
+                        for ball_number, delivery in enumerate(over_data.get('deliveries', []), start=1):
+                            batter = delivery.get('batter', None)
+                            bowler = delivery.get('bowler', None)
+                            runs_batter = delivery.get('runs', {}).get('batter', None)
+                            runs_extras = delivery.get('runs', {}).get('extras', None)
+                            runs_total = delivery.get('runs', {}).get('total', None)
+                            wicket = delivery.get('wickets', None)
+
+                            cursor.execute('''
+                            INSERT INTO innings (match_id, team, over, ball, batter, bowler, runs_batter, runs_extras, runs_total, wicket) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (match_id, team, over_number, ball_number, batter, bowler, runs_batter, runs_extras, runs_total, json.dumps(wicket)))
+                    
             except sqlite3.IntegrityError as e:
                 print(f"Failed to insert match {match_id}: {e}")
         else:
             print(f"Match {match_id} already exists in the database. Skipping match insertion.")
 
-        for team, players in match_info.get('players', {}).items():
-            for player in players:
-                player_id = match_info.get('registry', {}).get('people', {}).get(player, None)
-                if player_id:
-                    cursor.execute('INSERT OR IGNORE INTO players (player_id, name) VALUES (?, ?)', (player_id, player))
-
-        for inning in data.get('innings', []):
-            team = inning.get('team', None)
-            for over_data in inning.get('overs', []):
-                over_number = over_data.get('over', None)
-                for ball_number, delivery in enumerate(over_data.get('deliveries', []), start=1):
-                    batter = delivery.get('batter', None)
-                    bowler = delivery.get('bowler', None)
-                    runs_batter = delivery.get('runs', {}).get('batter', None)
-                    runs_extras = delivery.get('runs', {}).get('extras', None)
-                    runs_total = delivery.get('runs', {}).get('total', None)
-                    wicket = delivery.get('wickets', None)
-
-                    cursor.execute('''
-                    INSERT INTO innings (match_id, team, over, ball, batter, bowler, runs_batter, runs_extras, runs_total, wicket) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (match_id, team, over_number, ball_number, batter, bowler, runs_batter, runs_extras, runs_total, json.dumps(wicket)))
 
         conn.commit()
         conn.close()

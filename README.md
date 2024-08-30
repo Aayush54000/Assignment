@@ -44,7 +44,7 @@ python download_and_extract.py
 
 ### 3. Database Creation & Data Ingestion
 
-Use the Data_Ingestion.py script to create tables if doesn't exist and ingest the extracted data into the SQLite database:
+Use the database_creation_and_data_ingestion.py script to create tables if doesn't exist and ingest the extracted data into the SQLite database:
 ```bash
 python database_creation_and_data_ingestion.py
 ```
