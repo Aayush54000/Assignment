@@ -1,0 +1,111 @@
+Question 4. Can you provide an example of when, during a project or analysis, you learned about (or created) a new technique, method, or tool that you hadn’t known about previously? What inspired you to learn about this and how were you able to apply it?
+
+- Example of Learning a New Technique
+
+Context:
+- Project: Data migration from Snowflake to Databricks.
+- Challenge: Validating data integrity during the transfer of large datasets with specific conditions (date filters, client IDs, various catalogs/databases).
+
+Challenges Faced:
+- Validation Complexity: Simple row count comparisons were inadequate due to the data’s complexity and huge volume.
+- Automation Need: Manual validation was impractical, necessitating automation for efficiency.
+
+Inspiration and Learning:
+- PySpark: While familiar with basic PySpark functions, I needed to leverage its advanced capabilities for dynamic query generation and integration with Snowflake.
+- Snowflake Integration: I needed to learn how to efficiently query Snowflake data from Databricks and apply specific validation conditions.
+
+Solution:
+
+1. Research & Development:
+   - Dynamic Query Generation: Researched PySpark’s capabilities for creating dynamic queries based on metadata, allowing for flexible validation.
+   - Integration Techniques: Studied methods to connect Databricks with Snowflake and handle various validationconditions.
+   - Code:
+   ```python
+    def get_sf_df(query):
+        options = {
+            "sfUrl": f"https://{dbaccount}.snowflakecomputing.com/",
+            "sfUser": dbuser,
+            "sfPassword": dbpassword,
+            "sfWarehouse": dbwarehouse,
+            "sfDatabase": database_name,
+            "sfSchema": schema_name,
+            "query": query
+        }
+        return spark.read.format("snowflake").options(**options).load()
+   ```
+
+2. Script Development:
+   - Connection Setup: Implemented a function to establish a connection to Snowflake using PySpark, handling authentication and connection details.
+   - Metadata Handling: Created functions to retrieve and handle metadata, including date filters and client IDs.
+   - Query Construction: Developed logic to dynamically construct queries based on the presence of date filters, client IDs and catalogs/databases.
+   - Error Handling: Incorporated robust error handling to manage scenarios like missing tables or unmatched client IDs or No data in table.
+
+3. Implementation:
+   - Validation Script: Developed and deployed a script that:
+     - Connects to Snowflake and Databricks.
+     - Dynamically generates validation queries based on metadata.
+     - Compares row counts between Snowflake and Databricks.
+     - Applies necessary filters and handles exceptions.
+     - Generates dataframe with remark and validation status & counts for each and every table passed.
+   - Automation: Automated the validation process for multiple datasets, ensuring efficient and accurate comparison.
+
+Outcome:
+- Efficiency: The automated script significantly reduced manual effort and time, streamlining the validation process.
+- Accuracy: The script accurately identified data discrepancies by applying dynamic conditions, improving data integrity verification.
+- Learning & Growth: Enhanced skills in PySpark and Snowflake integration, emphasizing the importance of adaptability and continuous learning in data engineering.
+
+Conclusion:
+This project demonstrated the value of integrating new techniques with existing knowledge to solve complex problems. Developing and applying advanced validation methods improved both efficiency and accuracy, highlighting the need for continuous innovation in data engineering practices.
+
+
+Question 5. What was the most time-consuming, frustrating, or confusing bug that you encountered during a project? How did it get noticed and how were you able to resolve it?
+
+Context:
+- Project: Data migration from Snowflake to Databricks.
+- Objective: Unload data from Snowflake to Parquet format in S3, then transform and load it into Databricks tables.
+
+Challenge:
+- Issue: The `TIMESTAMP_TZ` and `TIMESTAMP_NTZ` types from the Snowflake were not directly supported by Parquet. Parquet does not natively handle these timestamp types.
+- Impact: Snowflake supports these types, but when exporting data to Parquet format, there was a compatibility issue, making it impossible to unload data without conversion.
+
+Detection:
+- Observation: During the data unloading process, attempts to write timestamp columns to Parquet resulted in errors or incorrect data handling.
+- Realization: Discovered that Parquet format does not support `TIMESTAMP_TZ` and `TIMESTAMP_NTZ` types directly.
+
+Resolution:
+1. Identify Timestamp Columns:
+   - Developed a script to detect `TIMESTAMP_TZ` and `TIMESTAMP_NTZ` columns in the dataset.
+   - Code:
+     ```python
+     tz_cols = [col for col, dtype in sf_df.dtypes if 'TIMESTAMP' in dtype.upper()]
+     ```
+
+2. Convert Timestamp Columns to String:
+   - Created logic to cast these columns to strings before exporting data to Parquet.
+   - Code:
+     ```python
+     if tz_cols:
+         query = f"""
+         COPY INTO '{s3_path}'
+         FROM (
+             SELECT 
+                 {' , '.join(col for col in sf_df.columns if col not in tz_cols)}, 
+                 {', '.join(f"CAST({col} AS STRING) AS {col}" for col in tz_cols)}
+             FROM {sf_table_name}
+         )
+         MAX_FILE_SIZE = {max_file_size}
+         HEADER = TRUE
+         OVERWRITE = TRUE
+         STORAGE_INTEGRATION = snowflake_data_export_int
+         FILE_FORMAT = (TYPE = '{file_format}')
+         """
+     ```
+
+3. Post-Processing in Databricks:
+   - Implemented transformation logic in Databricks to convert the string representations back to the appropriate timestamp types.
+   - Ensured data integrity and compatibility after conversion.
+
+Outcome:
+- Resolution Efficiency: Successfully handled the data export by converting unsupported timestamp types to a compatible format.
+- Improved Workflow: Enhanced the data migration process, ensuring that timestamp data was correctly managed across different formats.
+- Learning: Gained deeper understanding of data format compatibility issues and the importance of handling data type conversions during migration.
