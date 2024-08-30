@@ -25,47 +25,59 @@ class CricketStatsQueries:
     def team_win_statistics(self):
         """Runs a query to get team win statistics by gender and season."""
         query = """
+        WITH win_stats AS (
+            SELECT 
+                team,
+                gender,
+                season,
+                COUNT(*) AS total_matches,
+                SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) AS total_wins,
+                ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage
+            FROM (
+                SELECT team1 AS team, gender, season, winner FROM matches
+                UNION ALL
+                SELECT team2 AS team, gender, season, winner FROM matches
+            )
+            WHERE season = 2019 AND winner IS NOT NULL
+            GROUP BY team, gender, season
+        )
         SELECT 
             team,
             gender,
-            season,
-            COUNT(*) AS total_matches,
-            SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) AS total_wins,
-            ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage
-        FROM (
-            SELECT team1 AS team, gender, season, winner FROM matches
-            UNION ALL
-            SELECT team2 AS team, gender, season, winner FROM matches
-        )
-        WHERE winner IS NOT NULL
-        GROUP BY team, gender, season;
-        """
-        headers = ["Team", "Gender", "Season", "Total Matches", "Total Wins", "Win Percentage"]
+            win_percentage
+        FROM win_stats
+        WHERE (gender, win_percentage) IN (
+            SELECT gender, MAX(win_percentage) 
+            FROM win_stats
+            GROUP BY gender
+        );
+    """
+        headers = ["Team", "Gender", "Win Percentage"]
         self._run_query(query, headers)
+
 
     def highest_win_percentage(self):
         """Runs a query to find the team with the highest win percentage by gender."""
         query = """
-        WITH ranked_teams AS (
-            SELECT 
-                team,
-                gender,
-                ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage,
-                DENSE_RANK() OVER (PARTITION BY gender ORDER BY ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) DESC) AS rank
-            FROM (
-                SELECT team1 AS team, gender, winner FROM matches
-                UNION ALL
-                SELECT team2 AS team, gender, winner FROM matches
-            ) AS combined_matches
-            WHERE winner IS NOT NULL
-            GROUP BY team, gender
-        )
-        SELECT team, gender, win_percentage
-        FROM ranked_teams
-        WHERE rank = 1;
-        """
-        headers = ["Team", "Gender", "Win Percentage"]
+    SELECT 
+        team,
+        gender,
+        season,
+        COUNT(*) AS total_matches,
+        SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) AS total_wins,
+        ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage
+    FROM (
+        SELECT team1 AS team, gender, season, winner FROM matches
+        UNION ALL
+        SELECT team2 AS team, gender, season, winner FROM matches
+    ) AS combined_matches
+    WHERE winner IS NOT NULL
+    GROUP BY team, gender, season
+    ORDER BY gender, season, team;
+"""
+        headers = ["Team", "Gender", "Season", "Total Matches", "Total Wins", "Win Percentage"]
         self._run_query(query, headers)
+
 
     def highest_strike_rate(self):
         """Runs a query to find the player with the highest strike rate."""
