@@ -10,7 +10,7 @@ This project is designed to facilitate the analysis of One Day International (OD
  
 - Python Scripts:
   - `download_and_extract.py`: Automates the downloading and extraction of cricket match data, preparing it for ingestion into the database.
-  - `database_creation_&_data_ingestion.py`: Handles the ingestion of cricket match data into the SQLite database (`odi_cricket.db`). This script structures the data for efficient querying and analysis.
+  - `database_creation_and_data_ingestion.py`: Handles the ingestion of cricket match data into the SQLite database (`odi_cricket.db`). This script structures the data for efficient querying and analysis.
   - `queries.py`: Executes a set of predefined SQL queries to extract insights from the database.
 
 - Database:
@@ -46,7 +46,7 @@ python download_and_extract.py
 
 Use the Data_Ingestion.py script to create tables if doesn't exist and ingest the extracted data into the SQLite database:
 ```bash
-python database_creation_&_data_ingestion.py
+python database_creation_and_data_ingestion.py
 ```
 Matches Table
 ![Matches](Images/Matches.png)

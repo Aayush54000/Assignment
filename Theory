@@ -1,4 +1,13 @@
+Question 0. Rating of my cricket knowledge.
+-----------
+Answer.
+-------
+Rating : 3 (Intermediate knowledge)
+
 Question 4. Can you provide an example of when, during a project or analysis, you learned about (or created) a new technique, method, or tool that you hadn’t known about previously? What inspired you to learn about this and how were you able to apply it?
+-----------
+Answer.
+-------
 
 - Example of Learning a New Technique
 
@@ -59,6 +68,9 @@ This project demonstrated the value of integrating new techniques with existing 
 
 
 Question 5. What was the most time-consuming, frustrating, or confusing bug that you encountered during a project? How did it get noticed and how were you able to resolve it?
+-----------
+Answer.
+-------
 
 Context:
 - Project: Data migration from Snowflake to Databricks.
