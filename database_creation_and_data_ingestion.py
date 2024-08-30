@@ -80,6 +80,8 @@ class CricketDataIngestion:
 
         if not match_exists:
             try:
+                
+                # Ingest data in matches table
                 match_row = (
                     match_id,
                     match_info.get('dates', [None])[0],
@@ -99,12 +101,14 @@ class CricketDataIngestion:
                 cursor.execute('INSERT INTO matches VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', match_row)
                 print(f"Inserted match {match_id} into matches table.")
                 
+                # Ingest data in players table
                 for team, players in match_info.get('players', {}).items():
                     for player in players:
                         player_id = match_info.get('registry', {}).get('people', {}).get(player, None)
                         if player_id:
                             cursor.execute('INSERT OR IGNORE INTO players (player_id, name) VALUES (?, ?)', (player_id, player))
 
+                # Ingest data in innings table
                 for inning in data.get('innings', []):
                     team = inning.get('team', None)
                     for over_data in inning.get('overs', []):
