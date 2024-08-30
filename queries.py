@@ -34,11 +34,13 @@ class CricketStatsQueries:
                 SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) AS total_wins,
                 ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage
             FROM (
-                SELECT team1 AS team, gender, season, winner FROM matches
+                SELECT team1 AS team, gender, season, winner, win_type FROM matches
                 UNION ALL
-                SELECT team2 AS team, gender, season, winner FROM matches
-            )
-            WHERE season = 2019 AND winner IS NOT NULL
+                SELECT team2 AS team, gender, season, winner, win_type FROM matches
+            ) AS combined_matches
+            WHERE season = 2019 
+            AND winner IS NOT NULL
+            AND (win_type IS NULL OR win_type != 'DLS')  -- Exclude DLS-decided matches
             GROUP BY team, gender, season
         )
         SELECT 
@@ -47,13 +49,14 @@ class CricketStatsQueries:
             win_percentage
         FROM win_stats
         WHERE (gender, win_percentage) IN (
-            SELECT gender, MAX(win_percentage) 
+            SELECT gender, MAX(win_percentage)
             FROM win_stats
             GROUP BY gender
         );
-    """
+        """
         headers = ["Team", "Gender", "Win Percentage"]
         self._run_query(query, headers)
+
 
 
     def highest_win_percentage(self):
@@ -67,14 +70,15 @@ class CricketStatsQueries:
         SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) AS total_wins,
         ROUND(100.0 * SUM(CASE WHEN winner = team THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_percentage
     FROM (
-        SELECT team1 AS team, gender, season, winner FROM matches
+        SELECT team1 AS team, gender, season, winner, win_type FROM matches
         UNION ALL
-        SELECT team2 AS team, gender, season, winner FROM matches
+        SELECT team2 AS team, gender, season, winner, win_type FROM matches
     ) AS combined_matches
     WHERE winner IS NOT NULL
+      AND (win_type IS NULL OR win_type != 'DLS')  -- Excluding DLS-decided matches
     GROUP BY team, gender, season
     ORDER BY gender, season, team;
-"""
+    """
         headers = ["Team", "Gender", "Season", "Total Matches", "Total Wins", "Win Percentage"]
         self._run_query(query, headers)
 
@@ -89,12 +93,15 @@ class CricketStatsQueries:
             ROUND(SUM(runs_batter) * 100.0 / COUNT(*), 2) AS strike_rate
         FROM innings
         JOIN matches ON innings.match_id = matches.match_id
+        WHERE runs_batter IS NOT NULL  -- Ensures that we only count valid runs
         GROUP BY batter
+        HAVING COUNT(*) > 0  -- Ensure that the batter faced at least one ball
         ORDER BY strike_rate DESC
         LIMIT 4;
         """
         headers = ["Batter", "Total Runs", "Total Balls", "Strike Rate"]
         self._run_query(query, headers)
+
 
 if __name__ == "__main__":
     import argparse
