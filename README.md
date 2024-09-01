@@ -40,7 +40,7 @@ Run the Download_and_Extract.py script to download and extract the cricket match
 python download_and_extract.py
 ```
 ![Download_and_Extract](Images/Download_and_Extract.png)
-![Download_and_Extract_2](Images/Download_and_Extract_2.png)
+![Download_and_Extract_2](Images/file_list.png)
 
 ### 3. Database Creation & Data Ingestion
 
