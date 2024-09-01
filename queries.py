@@ -22,8 +22,8 @@ class CricketStatsQueries:
         print(table)
         conn.close()
 
-    def team_win_statistics(self):
-        """Runs a query to get team win statistics by gender and season."""
+    def highest_win_percentage(self):
+        """Runs a query to find the team with the highest win percentage by gender."""
         query = """
         WITH win_stats AS (
             SELECT 
@@ -59,8 +59,8 @@ class CricketStatsQueries:
 
 
 
-    def highest_win_percentage(self):
-        """Runs a query to find the team with the highest win percentage by gender."""
+    def team_win_statistics(self):
+        """Runs a query to get team win statistics by gender and season."""
         query = """
     SELECT 
         team,
